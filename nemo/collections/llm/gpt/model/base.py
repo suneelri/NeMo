@@ -220,6 +220,39 @@ def default_layer_spec(config: "GPTConfig", vp_stage: Optional[int] = None) -> M
         return local_layer_spec(config)
 
 
+
+def _get_transformer_layer_spec(use_te, config):
+    """Get transformer layer specification based on configuration.
+
+    Args:
+        use_te (bool): Whether to use Transformer Engine
+        args: Training arguments
+        config: Model configuration
+
+    Returns:
+        transformer_layer_spec: The transformer layer specification
+    """
+    if use_te:
+        return get_gpt_layer_with_transformer_engine_spec(
+            config.num_experts,
+            config.moe_grouped_gemm,
+            config.qk_layernorm,
+            config.multi_latent_attention,
+            config.moe_use_legacy_grouped_gemm,
+            qk_l2_norm=config.qk_l2_norm,
+            use_kitchen=config.use_kitchen,
+        )
+    else:
+        return get_gpt_layer_local_spec(
+            config.num_experts,
+            config.moe_grouped_gemm,
+            config.qk_layernorm,
+            config.multi_latent_attention,
+            config.moe_use_legacy_grouped_gemm,
+            normalization=config.normalization,
+            use_kitchen=config.use_kitchen,
+        )
+
 def mtp_block_spec(config: "GPTConfig", vp_stage: Optional[int] = None) -> Optional[ModuleSpec]:
     """Pass in the MTP block spec if model has MTP layers.
 
@@ -239,6 +272,10 @@ def mtp_block_spec(config: "GPTConfig", vp_stage: Optional[int] = None) -> Optio
                 spec = config.transformer_layer_spec(config)
         else:
             spec = config.transformer_layer_spec
+
+        if hasattr(spec, 'layer_specs') and len(spec.layer_specs) == 0:
+            spec = _get_transformer_layer_spec(use_transformer_engine=HAVE_TE, config=config)
+
         return get_gpt_mtp_block_spec(config, spec, use_transformer_engine=HAVE_TE, vp_stage=vp_stage)
     else:
         return None
