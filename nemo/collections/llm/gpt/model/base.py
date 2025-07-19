@@ -231,7 +231,7 @@ def _get_transformer_layer_spec(use_transformer_engine, config):
     Returns:
         transformer_layer_spec: The transformer layer specification
     """
-    if use_te:
+    if use_transformer_engine:
         return get_gpt_layer_with_transformer_engine_spec(
             config.num_experts,
             config.moe_grouped_gemm,
