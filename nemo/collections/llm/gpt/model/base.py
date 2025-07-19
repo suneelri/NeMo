@@ -221,12 +221,11 @@ def default_layer_spec(config: "GPTConfig", vp_stage: Optional[int] = None) -> M
 
 
 
-def _get_transformer_layer_spec(use_te, config):
+def _get_transformer_layer_spec(use_transformer_engine, config):
     """Get transformer layer specification based on configuration.
 
     Args:
-        use_te (bool): Whether to use Transformer Engine
-        args: Training arguments
+        use_transformer_engine (bool): Whether to use Transformer Engine
         config: Model configuration
 
     Returns:
